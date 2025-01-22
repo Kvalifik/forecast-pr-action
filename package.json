@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "tsc && ncc build lib/index.js",
+    "build": "tsc && ncc build lib/index.js --license licenses.txt",
     "prepare": "husky install"
   },
   "dependencies": {
