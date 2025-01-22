@@ -1,50 +1,25 @@
 # Forecast pull-request Github Action
 
-If the branch name of the current pull request or the title starts with a Forecast ticket id:
+# Hello world javascript action
 
-- It adds the ticket number to the PR title
-- It adds the Forecast link to the PR description
-- It also adds a preview link to the PR description if provided as `preview-link` input
+This action prints "Hello World" or "Hello" + the name of a person to greet to the log.
 
-If the branch name and the PR title does not start with a Forecast ticket:
+## Inputs
 
-- The workflow will fail
+### `who-to-greet`
 
-## Variables
+**Required** The name of the person to greet. Default `"World"`.
 
-| input                     | required | description                                                                             |
-| ------------------------- | :------: | --------------------------------------------------------------------------------------- |
-| `github-token`            |    ❌    | The GitHub token used to create an authenticated client (default: `${{ github.token }}` |
-| `forecast-url`            |    ✅    | Subdomain used for Forecast links (i.e. foobar => https://app.forecast.it/T123)         |
-|                           |
-| `ticket-regex`            |    ✅    | Regex to match jira ticket in branch name (i.e. `^ABC-\d+`)                             |
-| `ticket-regex-flags`      |    ❌    | Flags to add to ticket-regex (default: `i`)                                             |
-| `exception-regex`         |    ❌    | Regex to allow exceptions where ticket-regex wouldn't match (default: `^dependabot\/`)  |
-| `exception-regex-flags`   |    ❌    | Flags to add to exception-regex                                                         |
-| `clean-title-regex`       |    ❌    | Regex used to delete text from PR title                                                 |
-| `clean-title-regex-flags` |    ❌    | Flags to add to clean-title-regex                                                       |
-| `preview-link`            |    ❌    | Preview link to add to PR description (i.e. `https://preview.example.com`)              |
+## Outputs
 
-## Example of usage
+### `time`
 
-```yml
-name: Update pull request
+The time we greeted you.
 
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+## Example usage
 
-jobs:
-  title-and-description:
-    if: github.actor != 'dependabot[bot]' # to avoid running it on Dependabot PRs
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Add Forecast ticket to PR title and description
-        uses: kvalifik/forecast-pr-action@v2
-        with:
-          forecast-url: https://app.forecast.it/
-          ticket-regex: ^A1C-\\d+
-          clean-title-regex: ^\\s*A1\\s+c\\s+\\d+\\s*
-          preview-link: https://preview-${{ github.event.pull_request.number }}.example.com"
+```yaml
+uses: actions/hello-world-javascript-action@e76147da8e5c81eaf017dede5645551d4b94427b
+with:
+  who-to-greet: "Mona the Octocat"
 ```

@@ -31830,33 +31830,23 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-var exports = __webpack_exports__;
 
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core_1 = __nccwpck_require__(7484);
-const github_1 = __nccwpck_require__(3228);
-async function run() {
-    var _a;
-    const token = (0, core_1.getInput)("gh-token");
-    const label = (0, core_1.getInput)("label");
-    const octokit = (0, github_1.getOctokit)(token);
-    const pullRequest = github_1.context.payload.pull_request;
-    try {
-        if (!pullRequest) {
-            throw new Error("This action can only be run on Pull Requests");
-        }
-        await octokit.rest.issues.addLabels({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            issue_number: pullRequest.number,
-            labels: [label],
-        });
-    }
-    catch (error) {
-        (0, core_1.setFailed)((_a = error === null || error === void 0 ? void 0 : error.message) !== null && _a !== void 0 ? _a : "Unknown error");
-    }
+const core = __nccwpck_require__(7484);
+const github = __nccwpck_require__(3228);
+try {
+    const nameToGreet = core.getInput("who-to-greet");
+    console.log(`Hello ${nameToGreet}!`);
+    const time = new Date().toTimeString();
+    core.setOutput("time", time);
+    const payload = JSON.stringify(github.context.payload, undefined, 2);
+    console.log(`The event payload: ${payload}`);
 }
-run();
+catch (error) {
+    if (error instanceof Error) {
+        core.setFailed(error.message);
+    }
+    console.log(error);
+}
 //# sourceMappingURL=index.js.map
 })();
 

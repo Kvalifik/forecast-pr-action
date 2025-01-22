@@ -1,27 +1,18 @@
-import { getInput, setFailed } from "@actions/core";
-import { context, getOctokit } from "@actions/github";
+import core from "@actions/core";
+import github from "@actions/github";
 
-async function run() {
-  const token = getInput("gh-token");
-  const label = getInput("label");
-
-  const octokit = getOctokit(token);
-  const pullRequest = context.payload.pull_request;
-
-  try {
-    if (!pullRequest) {
-      throw new Error("This action can only be run on Pull Requests");
-    }
-
-    await octokit.rest.issues.addLabels({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: pullRequest.number,
-      labels: [label],
-    });
-  } catch (error) {
-    setFailed((error as Error)?.message ?? "Unknown error");
+try {
+  // `who-to-greet` input defined in action metadata file
+  const nameToGreet = core.getInput("who-to-greet");
+  console.log(`Hello ${nameToGreet}!`);
+  const time = new Date().toTimeString();
+  core.setOutput("time", time);
+  // Get the JSON webhook payload for the event that triggered the workflow
+  const payload = JSON.stringify(github.context.payload, undefined, 2);
+  console.log(`The event payload: ${payload}`);
+} catch (error) {
+  if (error instanceof Error) {
+    core.setFailed(error.message);
   }
+  console.log(error);
 }
-
-run();

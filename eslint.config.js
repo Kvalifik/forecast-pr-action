@@ -7,6 +7,6 @@ module.exports = [
       node: true,
       "jest/globals": true,
     },
-    ignorePatterns: ["*.test.ts"],
+    ignorePatterns: ["*.spec.ts"],
   },
 ];
