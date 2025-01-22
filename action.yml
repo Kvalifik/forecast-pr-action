@@ -1,37 +1,13 @@
-name: Forecast Pull Request Info
-author: Kvalifik
-description: Add Forecast ticket information to PR title / add links to PR description
+name: "Hello World"
+description: "Greet someone and record the time"
 inputs:
-  github-token:
-    description: The GitHub token used to create an authenticated client
-    default: ${{ github.token }}
-    required: false
-  forecast-account:
-    description: Subdomain used for Forecast links (i.e. foobar => https://app.forecast.it/T123)
+  who-to-greet: # id of input
+    description: "Who to greet"
     required: true
-  ticket-regex:
-    description: Regex to match Forecast ticket in branch name (i.e. ^ABC-\d+)
-    required: true
-  ticket-regex-flags:
-    description: Flags to add to ticket-regex
-    default: i
-    required: false
-  exception-regex:
-    description: Regex to allow exceptions where ticket-regex wouldn't match
-    default: ^dependabot\/
-    required: false
-  exception-regex-flags:
-    description: Flags to add to exception-regex
-    required: false
-  clean-title-regex:
-    description: Regex used to delete text from PR title
-    required: false
-  clean-title-regex-flags:
-    description: Flags to add to clean-title-regex
-    required: false
-branding:
-  icon: "activity"
-  color: "green"
+    default: "World"
+outputs:
+  time: # id of output
+    description: "The time we greeted you"
 runs:
-  using: node20
-  main: dist/index.js
+  using: "node20"
+  main: "index.js"
