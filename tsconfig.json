@@ -15,7 +15,7 @@
     "checkJs": true,
     "baseUrl": ".",
     "lib": ["ESNext", "ESNext.AsyncIterable", "es6", "dom"],
-    "outDir": "dist",
+    "outDir": "lib",
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src"],
