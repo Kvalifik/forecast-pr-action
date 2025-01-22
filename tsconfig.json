@@ -2,10 +2,22 @@
   "compilerOptions": {
     "target": "ES2019",
     "module": "commonjs",
-    "outDir": "lib",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Node",
     "strict": true,
-    "skipLibCheck": true
-  }
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "checkJs": true,
+    "baseUrl": ".",
+    "lib": ["ESNext", "ESNext.AsyncIterable", "es6", "dom"],
+    "outDir": "dist",
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }
