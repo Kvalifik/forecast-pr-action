@@ -35,3 +35,6 @@ sw.*
 
 # macOS
 .DS_Store
+
+# Lib
+lib
