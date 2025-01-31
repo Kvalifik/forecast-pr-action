@@ -1,0 +1,31 @@
+name: Update pull request
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}-${{ github.event_name }}-update-pr
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  add-title-and-description:
+    if: |
+      github.actor != 'dependabot[bot]'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout 🛎
+        uses: actions/checkout@v4
+
+      - name: Add preview & Jira links to PR description 📝
+        uses: onrunning/jira-pr-action@v1
+        with:
+          jira-account: onrunning
+          ticket-regex: ^B2C-\d+
+          exception-regex: ^(main$|dependabot\/|revert-\d+)
+          clean-title-regex: ^\s*B2\s+c\s+\d+\s*
+          preview-link: https://on-shop-${{ github.event.pull_request.number }}.on-running.com
