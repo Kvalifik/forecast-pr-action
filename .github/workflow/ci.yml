@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+strategy:
+  matrix:
+    node-version: ["18.x", "20.x"]
+
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
