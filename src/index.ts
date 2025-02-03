@@ -16,7 +16,7 @@ function cleanPullRequestTitle(title: string, cleanTitleRegex?: RegExp) {
   return cleanTitleRegex ? title.replace(cleanTitleRegex, "") : title;
 }
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   try {
     if (!context.payload.pull_request) return;
 
@@ -33,6 +33,8 @@ async function run(): Promise<void> {
       [INPUT_FORECAST_PROJECT_ID]: forecastProjectId,
       [INPUT_TICKET_REGEX]: ticketRegexInput,
     };
+
+    // Check for missing required inputs
     const missingRequiredInputs = Object.entries(requiredInputs).filter(
       ([, input]) => !input
     );
@@ -121,4 +123,6 @@ async function run(): Promise<void> {
   }
 }
 
-run();
+if (!process.env.JEST_WORKER_ID) {
+  run();
+}
