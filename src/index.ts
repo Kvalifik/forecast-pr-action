@@ -1,4 +1,4 @@
-import core from "@actions/core";
+import * as core from "@actions/core";
 import { context, getOctokit } from "@actions/github";
 
 const INPUT_GITHUB_TOKEN = "github-token";
