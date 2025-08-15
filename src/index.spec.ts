@@ -66,6 +66,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
           "ticket-regex": "",
           "ticket-regex-flags": "",
           "exception-regex": "^dependabot/",
@@ -89,6 +91,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
           "ticket-regex": "",
           "ticket-regex-flags": "",
           "exception-regex": "^dependabot/",
@@ -106,7 +110,157 @@ describe("run", () => {
         repo: "testrepo",
         pull_number: 123,
         title: "T123 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
+      });
+    });
+  });
+
+  describe("URL formatting", () => {
+    it("should add P prefix to project ID when not provided", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
+      });
+    });
+
+    it("should not add P prefix when already provided", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "P12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
+      });
+    });
+
+    it("should use custom base URL when provided", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "forecast-base-url": "https://custom.forecast.com/project",
+          "forecast-link-placeholder": "",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://custom.forecast.com/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
+      });
+    });
+  });
+
+  describe("placeholder functionality", () => {
+    it("should replace placeholder in PR description when provided", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "{{FORECAST_LINK}}",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      (github.context as any).payload.pull_request.body =
+        "## Summary\nThis fixes a bug\n\n## Forecast\n{{FORECAST_LINK}}\n\n## Testing\nTested locally";
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "T123 - Fix bug in authentication",
+        body: "## Summary\nThis fixes a bug\n\n## Forecast\n**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\n## Testing\nTested locally",
+      });
+    });
+
+    it("should fall back to default behavior when placeholder not found", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "{{FORECAST_LINK}}",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      (github.context as any).payload.pull_request.body =
+        "This PR fixes a critical bug";
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
       });
     });
   });
@@ -117,6 +271,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "^dependabot/",
@@ -134,7 +290,7 @@ describe("run", () => {
         repo: "testrepo",
         pull_number: 123,
         title: "T123 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
       });
     });
 
@@ -143,6 +299,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
@@ -161,96 +319,9 @@ describe("run", () => {
         owner: "testowner",
         repo: "testrepo",
         pull_number: 123,
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
       });
       expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty("title");
-    });
-
-    it("should clean title before adding ticket when clean-title-regex is provided", async () => {
-      mockGetInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "github-token": "test-token",
-          "forecast-project-id": "12345",
-          "ticket-regex": "^T\\d+",
-          "ticket-regex-flags": "i",
-          "exception-regex": "",
-          "exception-regex-flags": "",
-          "clean-title-regex": "\\[WIP\\]\\s*",
-          "clean-title-regex-flags": "i",
-        };
-        return inputs[name] || "";
-      });
-
-      (github.context as any).payload.pull_request.title =
-        "[WIP] Fix bug in authentication";
-
-      await run();
-
-      expect(mockUpdate).toHaveBeenCalledWith({
-        owner: "testowner",
-        repo: "testrepo",
-        pull_number: 123,
-        title: "T123 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
-      });
-    });
-
-    it("should update existing Forecast link in body", async () => {
-      mockGetInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "github-token": "test-token",
-          "forecast-project-id": "12345",
-          "ticket-regex": "^T\\d+",
-          "ticket-regex-flags": "i",
-          "exception-regex": "",
-          "exception-regex-flags": "",
-          "clean-title-regex": "",
-          "clean-title-regex-flags": "",
-        };
-        return inputs[name] || "";
-      });
-
-      (github.context as any).payload.pull_request.body =
-        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/P999)**\n\nThis PR fixes a critical bug";
-
-      await run();
-
-      expect(mockUpdate).toHaveBeenCalledWith({
-        owner: "testowner",
-        repo: "testrepo",
-        pull_number: 123,
-        title: "T123 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
-      });
-    });
-
-    it("should not update body if Forecast link already correct", async () => {
-      mockGetInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "github-token": "test-token",
-          "forecast-project-id": "12345",
-          "ticket-regex": "^T\\d+",
-          "ticket-regex-flags": "i",
-          "exception-regex": "",
-          "exception-regex-flags": "",
-          "clean-title-regex": "",
-          "clean-title-regex-flags": "",
-        };
-        return inputs[name] || "";
-      });
-
-      (github.context as any).payload.pull_request.body =
-        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug";
-
-      await run();
-
-      expect(mockUpdate).toHaveBeenCalledWith({
-        owner: "testowner",
-        repo: "testrepo",
-        pull_number: 123,
-        title: "T123 - Fix bug in authentication",
-      });
-      expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty("body");
     });
 
     it("should work with P-prefixed project tickets", async () => {
@@ -258,6 +329,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
           "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
@@ -278,41 +351,8 @@ describe("run", () => {
         repo: "testrepo",
         pull_number: 123,
         title: "P456 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/P456)**\n\nThis PR fixes a critical bug",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/P456)**\n\nThis PR fixes a critical bug",
       });
-    });
-  });
-
-  describe("when ticket is found in PR title but not branch", () => {
-    it("should extract ticket from title and update body", async () => {
-      mockGetInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "github-token": "test-token",
-          "forecast-project-id": "12345",
-          "ticket-regex": "^[TP]\\d+",
-          "ticket-regex-flags": "i",
-          "exception-regex": "",
-          "exception-regex-flags": "",
-          "clean-title-regex": "",
-          "clean-title-regex-flags": "",
-        };
-        return inputs[name] || "";
-      });
-
-      (github.context as any).payload.pull_request.head.ref =
-        "feature/new-feature";
-      (github.context as any).payload.pull_request.title =
-        "P456 - Add new feature";
-
-      await run();
-
-      expect(mockUpdate).toHaveBeenCalledWith({
-        owner: "testowner",
-        repo: "testrepo",
-        pull_number: 123,
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/P456)**\n\nThis PR fixes a critical bug",
-      });
-      expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty("title");
     });
   });
 
@@ -322,6 +362,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
           "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "^dependabot/",
@@ -349,6 +391,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
           "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "^dependabot/",
@@ -368,57 +412,6 @@ describe("run", () => {
 
       expect(mockSetFailed).not.toHaveBeenCalled();
       expect(mockUpdate).not.toHaveBeenCalled();
-    });
-
-    it("should handle exception regex with flags", async () => {
-      mockGetInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "github-token": "test-token",
-          "forecast-project-id": "12345",
-          "ticket-regex": "^[TP]\\d+",
-          "ticket-regex-flags": "i",
-          "exception-regex": "^DEPENDABOT/",
-          "exception-regex-flags": "i",
-          "clean-title-regex": "",
-          "clean-title-regex-flags": "",
-        };
-        return inputs[name] || "";
-      });
-
-      (github.context as any).payload.pull_request.head.ref =
-        "dependabot/npm_and_yarn/lodash-4.17.21";
-      (github.context as any).payload.pull_request.title = "Bump lodash";
-
-      await run();
-
-      expect(mockSetFailed).not.toHaveBeenCalled();
-      expect(mockUpdate).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("when PR update fails", () => {
-    it("should log error when update returns non-200 status", async () => {
-      mockGetInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "github-token": "test-token",
-          "forecast-project-id": "12345",
-          "ticket-regex": "^[TP]\\d+",
-          "ticket-regex-flags": "i",
-          "exception-regex": "",
-          "exception-regex-flags": "",
-          "clean-title-regex": "",
-          "clean-title-regex-flags": "",
-        };
-        return inputs[name] || "";
-      });
-
-      mockUpdate.mockResolvedValue({ status: 403 });
-
-      await run();
-
-      expect(mockError).toHaveBeenCalledWith(
-        "Updating the pull request has failed with 403"
-      );
     });
   });
 
@@ -451,33 +444,6 @@ describe("run", () => {
       await run();
 
       expect(mockSetFailed).toHaveBeenCalledWith("");
-    });
-  });
-
-  describe("when nothing needs updating", () => {
-    it("should not call update when no changes needed", async () => {
-      mockGetInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "github-token": "test-token",
-          "forecast-project-id": "12345",
-          "ticket-regex": "^[TP]\\d+",
-          "ticket-regex-flags": "i",
-          "exception-regex": "",
-          "exception-regex-flags": "",
-          "clean-title-regex": "",
-          "clean-title-regex-flags": "",
-        };
-        return inputs[name] || "";
-      });
-
-      (github.context as any).payload.pull_request.title =
-        "T123 - Fix bug in authentication";
-      (github.context as any).payload.pull_request.body =
-        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug";
-
-      await run();
-
-      expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 });

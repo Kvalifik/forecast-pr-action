@@ -10,8 +10,15 @@ inputs:
     default: ${{ github.token }}
     required: false
   forecast-project-id:
-    description: Id for the Forecast project
+    description: Id for the Forecast project (P will be auto-prefixed if not provided)
     required: true
+  forecast-base-url:
+    description: Base URL for Forecast links
+    default: https://app.forecast.it/project
+    required: false
+  forecast-link-placeholder:
+    description: Placeholder string in PR description where Forecast link should be inserted (e.g., "{{FORECAST_LINK}}")
+    required: false
   ticket-regex:
     description: Regex to match Forecast ticket in branch name (default matches T123 or P123)
     default: ^[TP]\d+

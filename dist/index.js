@@ -45,6 +45,8 @@ const core = __importStar(__nccwpck_require__(7484));
 const github_1 = __nccwpck_require__(3228);
 const INPUT_GITHUB_TOKEN = "github-token";
 const INPUT_FORECAST_PROJECT_ID = "forecast-project-id";
+const INPUT_FORECAST_BASE_URL = "forecast-base-url";
+const INPUT_FORECAST_LINK_PLACEHOLDER = "forecast-link-placeholder";
 const INPUT_TICKET_REGEX = "ticket-regex";
 const INPUT_TICKET_REGEX_FLAGS = "ticket-regex-flags";
 const INPUT_EXCEPTION_REGEX = "exception-regex";
@@ -55,12 +57,21 @@ const FORECAST_LINK_TEXT = "Forecast ticket";
 function cleanPullRequestTitle(title, cleanTitleRegex) {
     return cleanTitleRegex ? title.replace(cleanTitleRegex, "") : title;
 }
+function normalizeProjectId(projectId) {
+    return projectId.toUpperCase().startsWith('P') ? projectId : `P${projectId}`;
+}
+function buildForecastUrl(baseUrl, projectId, ticketId) {
+    const normalizedProjectId = normalizeProjectId(projectId);
+    return `${baseUrl}/${normalizedProjectId}/task-board/${ticketId}`;
+}
 async function run() {
     try {
         if (!github_1.context.payload.pull_request)
             return;
         const token = core.getInput(INPUT_GITHUB_TOKEN);
         const forecastProjectId = core.getInput(INPUT_FORECAST_PROJECT_ID);
+        const forecastBaseUrl = core.getInput(INPUT_FORECAST_BASE_URL) || "https://app.forecast.it/project";
+        const forecastLinkPlaceholder = core.getInput(INPUT_FORECAST_LINK_PLACEHOLDER);
         const ticketRegexInput = core.getInput(INPUT_TICKET_REGEX);
         const ticketRegexFlags = core.getInput(INPUT_TICKET_REGEX_FLAGS);
         const exceptionRegex = core.getInput(INPUT_EXCEPTION_REGEX);
@@ -92,7 +103,7 @@ async function run() {
             github_1.context.payload.pull_request.title.match(ticketRegex) ||
             [];
         if (ticketInBranch) {
-            const forecastLink = `https://app.forecast.it/project/${forecastProjectId}/ticket/${ticketInBranch}`;
+            const forecastLink = buildForecastUrl(forecastBaseUrl, forecastProjectId, ticketInBranch);
             ticketLine = `**[${FORECAST_LINK_TEXT}](${forecastLink})**\n`;
             if (!ticketRegex.test(prTitle))
                 request.title = `${ticketInBranch} - ${prTitle}`;
@@ -106,11 +117,18 @@ async function run() {
         }
         if (ticketLine) {
             let hasBodyChanged = false;
-            const updatedBody = prBody.replace(new RegExp(`(\\*\\*\\[${FORECAST_LINK_TEXT}\\][^\\n]+\\n)?\\n?`), (match) => {
-                const replacement = `${ticketLine}\n`;
-                hasBodyChanged = match !== replacement;
-                return replacement;
-            });
+            let updatedBody = prBody;
+            if (forecastLinkPlaceholder && prBody.includes(forecastLinkPlaceholder)) {
+                updatedBody = prBody.replace(forecastLinkPlaceholder, ticketLine.trim());
+                hasBodyChanged = updatedBody !== prBody;
+            }
+            else {
+                updatedBody = prBody.replace(new RegExp(`(\\*\\*\\[${FORECAST_LINK_TEXT}\\][^\\n]+\\n)?\\n?`), (match) => {
+                    const replacement = `${ticketLine}\n`;
+                    hasBodyChanged = match !== replacement;
+                    return replacement;
+                });
+            }
             if (hasBodyChanged)
                 request.body = updatedBody;
         }
