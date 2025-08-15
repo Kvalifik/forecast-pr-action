@@ -1,0 +1,15 @@
+name: Update PR with Forecast Info
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  update-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update PR with Forecast ticket info
+        uses: kvalifik/forecast-pr-action@v1
+        with:
+          forecast-project-id: "YOUR_FORECAST_PROJECT_ID"
+          # The action automatically matches T123 or P456 patterns (case-insensitive)
+          # No need to specify ticket-regex unless you have custom patterns

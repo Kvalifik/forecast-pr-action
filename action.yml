@@ -10,8 +10,9 @@ inputs:
     description: Id for the Forecast project
     required: true
   ticket-regex:
-    description: Regex to match Forecast ticket in branch name (i.e. ^ABC-\d+)
-    required: true
+    description: Regex to match Forecast ticket in branch name (default matches T123 or P123)
+    default: ^[TP]\d+
+    required: false
   ticket-regex-flags:
     description: Flags to add to ticket-regex
     default: i

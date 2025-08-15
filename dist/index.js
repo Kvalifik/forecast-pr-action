@@ -6,11 +6,42 @@
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core_1 = __importDefault(__nccwpck_require__(7484));
+exports.run = run;
+const core = __importStar(__nccwpck_require__(7484));
 const github_1 = __nccwpck_require__(3228);
 const INPUT_GITHUB_TOKEN = "github-token";
 const INPUT_FORECAST_PROJECT_ID = "forecast-project-id";
@@ -28,27 +59,22 @@ async function run() {
     try {
         if (!github_1.context.payload.pull_request)
             return;
-        const token = core_1.default.getInput(INPUT_GITHUB_TOKEN);
-        const forecastProjectId = core_1.default.getInput(INPUT_FORECAST_PROJECT_ID);
-        const ticketRegexInput = core_1.default.getInput(INPUT_TICKET_REGEX);
-        const ticketRegexFlags = core_1.default.getInput(INPUT_TICKET_REGEX_FLAGS);
-        const exceptionRegex = core_1.default.getInput(INPUT_EXCEPTION_REGEX);
-        const exceptionRegexFlags = core_1.default.getInput(INPUT_EXCEPTION_REGEX_FLAGS);
-        const cleanTitleRegexInput = core_1.default.getInput(INPUT_CLEAN_TITLE_REGEX);
-        const cleanTitleRegexFlags = core_1.default.getInput(INPUT_CLEAN_TITLE_REGEX_FLAGS);
-        const requiredInputs = {
-            [INPUT_FORECAST_PROJECT_ID]: forecastProjectId,
-            [INPUT_TICKET_REGEX]: ticketRegexInput,
-        };
-        const missingRequiredInputs = Object.entries(requiredInputs).filter(([, input]) => !input);
-        if (missingRequiredInputs.length) {
-            const plural = missingRequiredInputs.length > 1 ? "s" : "";
-            const list = missingRequiredInputs.map(([name]) => name).join(", ");
-            core_1.default.error(`Missing required input${plural}: ${list}`);
+        const token = core.getInput(INPUT_GITHUB_TOKEN);
+        const forecastProjectId = core.getInput(INPUT_FORECAST_PROJECT_ID);
+        const ticketRegexInput = core.getInput(INPUT_TICKET_REGEX);
+        const ticketRegexFlags = core.getInput(INPUT_TICKET_REGEX_FLAGS);
+        const exceptionRegex = core.getInput(INPUT_EXCEPTION_REGEX);
+        const exceptionRegexFlags = core.getInput(INPUT_EXCEPTION_REGEX_FLAGS);
+        const cleanTitleRegexInput = core.getInput(INPUT_CLEAN_TITLE_REGEX);
+        const cleanTitleRegexFlags = core.getInput(INPUT_CLEAN_TITLE_REGEX_FLAGS);
+        if (!forecastProjectId) {
+            core.error(`Missing required input: ${INPUT_FORECAST_PROJECT_ID}`);
             return;
         }
+        const finalTicketRegex = ticketRegexInput || "^[TP]\\d+";
+        const finalTicketRegexFlags = ticketRegexFlags || "i";
         const github = (0, github_1.getOctokit)(token);
-        const ticketRegex = new RegExp(ticketRegexInput, ticketRegexFlags);
+        const ticketRegex = new RegExp(finalTicketRegex, finalTicketRegexFlags);
         const cleanTitleRegex = cleanTitleRegexInput
             ? new RegExp(cleanTitleRegexInput, cleanTitleRegexFlags)
             : undefined;
@@ -75,7 +101,7 @@ async function run() {
             const isException = new RegExp(exceptionRegex, exceptionRegexFlags).test(headBranch);
             if (!isException) {
                 const regexStr = ticketRegex.toString();
-                core_1.default.setFailed(`Neither current branch nor title start with a Jira ticket ${regexStr}.`);
+                core.setFailed(`Neither current branch nor title start with a Forecast ticket ${regexStr}.`);
             }
         }
         if (ticketLine) {
@@ -91,7 +117,7 @@ async function run() {
         if (request.title || request.body) {
             const response = await github.rest.pulls.update(request);
             if (response.status !== 200) {
-                core_1.default.error(`Updating the pull request has failed with ${response.status}`);
+                core.error(`Updating the pull request has failed with ${response.status}`);
             }
         }
     }
@@ -101,10 +127,12 @@ async function run() {
             : typeof error === "string"
                 ? error
                 : "";
-        core_1.default.setFailed(message);
+        core.setFailed(message);
     }
 }
-run();
+if (!process.env.JEST_WORKER_ID) {
+    run();
+}
 //# sourceMappingURL=index.js.map
 
 /***/ }),

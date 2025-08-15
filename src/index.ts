@@ -1,4 +1,4 @@
-import core from "@actions/core";
+import * as core from "@actions/core";
 import { context, getOctokit } from "@actions/github";
 
 const INPUT_GITHUB_TOKEN = "github-token";
@@ -16,7 +16,7 @@ function cleanPullRequestTitle(title: string, cleanTitleRegex?: RegExp) {
   return cleanTitleRegex ? title.replace(cleanTitleRegex, "") : title;
 }
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   try {
     if (!context.payload.pull_request) return;
 
@@ -29,22 +29,18 @@ async function run(): Promise<void> {
     const cleanTitleRegexInput = core.getInput(INPUT_CLEAN_TITLE_REGEX);
     const cleanTitleRegexFlags = core.getInput(INPUT_CLEAN_TITLE_REGEX_FLAGS);
 
-    const requiredInputs = {
-      [INPUT_FORECAST_PROJECT_ID]: forecastProjectId,
-      [INPUT_TICKET_REGEX]: ticketRegexInput,
-    };
-    const missingRequiredInputs = Object.entries(requiredInputs).filter(
-      ([, input]) => !input
-    );
-
-    if (missingRequiredInputs.length) {
-      const plural = missingRequiredInputs.length > 1 ? "s" : "";
-      const list = missingRequiredInputs.map(([name]) => name).join(", ");
-      core.error(`Missing required input${plural}: ${list}`);
+    // Check for missing required inputs
+    if (!forecastProjectId) {
+      core.error(`Missing required input: ${INPUT_FORECAST_PROJECT_ID}`);
       return;
     }
+
+    // Use default regex if not provided (matches T123 or P123 patterns)
+    const finalTicketRegex = ticketRegexInput || "^[TP]\\d+";
+    const finalTicketRegexFlags = ticketRegexFlags || "i";
+
     const github = getOctokit(token);
-    const ticketRegex = new RegExp(ticketRegexInput, ticketRegexFlags);
+    const ticketRegex = new RegExp(finalTicketRegex, finalTicketRegexFlags);
     const cleanTitleRegex = cleanTitleRegexInput
       ? new RegExp(cleanTitleRegexInput, cleanTitleRegexFlags)
       : undefined;
@@ -84,7 +80,7 @@ async function run(): Promise<void> {
       if (!isException) {
         const regexStr = ticketRegex.toString();
         core.setFailed(
-          `Neither current branch nor title start with a Jira ticket ${regexStr}.`
+          `Neither current branch nor title start with a Forecast ticket ${regexStr}.`
         );
       }
     }
@@ -121,4 +117,6 @@ async function run(): Promise<void> {
   }
 }
 
-run();
+if (!process.env.JEST_WORKER_ID) {
+  run();
+}
