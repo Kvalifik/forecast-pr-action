@@ -1,0 +1,20 @@
+name: Update PR with Forecast Info
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  update-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update PR with Forecast ticket info
+        uses: kvalifik/forecast-pr-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          forecast-project-id: "YOUR_FORECAST_PROJECT_ID"
+          ticket-regex: "^[A-Z]+-\\d+"
+          ticket-regex-flags: "i"
+          exception-regex: "^dependabot/"
+          exception-regex-flags: ""
+          clean-title-regex: ""
+          clean-title-regex-flags: ""
