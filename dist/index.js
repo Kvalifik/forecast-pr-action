@@ -67,19 +67,14 @@ async function run() {
         const exceptionRegexFlags = core.getInput(INPUT_EXCEPTION_REGEX_FLAGS);
         const cleanTitleRegexInput = core.getInput(INPUT_CLEAN_TITLE_REGEX);
         const cleanTitleRegexFlags = core.getInput(INPUT_CLEAN_TITLE_REGEX_FLAGS);
-        const requiredInputs = {
-            [INPUT_FORECAST_PROJECT_ID]: forecastProjectId,
-            [INPUT_TICKET_REGEX]: ticketRegexInput,
-        };
-        const missingRequiredInputs = Object.entries(requiredInputs).filter(([, input]) => !input);
-        if (missingRequiredInputs.length) {
-            const plural = missingRequiredInputs.length > 1 ? "s" : "";
-            const list = missingRequiredInputs.map(([name]) => name).join(", ");
-            core.error(`Missing required input${plural}: ${list}`);
+        if (!forecastProjectId) {
+            core.error(`Missing required input: ${INPUT_FORECAST_PROJECT_ID}`);
             return;
         }
+        const finalTicketRegex = ticketRegexInput || "^[TP]\\d+";
+        const finalTicketRegexFlags = ticketRegexFlags || "i";
         const github = (0, github_1.getOctokit)(token);
-        const ticketRegex = new RegExp(ticketRegexInput, ticketRegexFlags);
+        const ticketRegex = new RegExp(finalTicketRegex, finalTicketRegexFlags);
         const cleanTitleRegex = cleanTitleRegexInput
             ? new RegExp(cleanTitleRegexInput, cleanTitleRegexFlags)
             : undefined;
@@ -106,7 +101,7 @@ async function run() {
             const isException = new RegExp(exceptionRegex, exceptionRegexFlags).test(headBranch);
             if (!isException) {
                 const regexStr = ticketRegex.toString();
-                core.setFailed(`Neither current branch nor title start with a Jira ticket ${regexStr}.`);
+                core.setFailed(`Neither current branch nor title start with a Forecast ticket ${regexStr}.`);
             }
         }
         if (ticketLine) {

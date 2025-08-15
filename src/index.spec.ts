@@ -38,7 +38,7 @@ describe("run", () => {
           title: "Fix bug in authentication",
           body: "This PR fixes a critical bug",
           head: {
-            ref: "ABC-123-fix-auth-bug",
+            ref: "T123-fix-auth-bug",
           },
         },
       },
@@ -66,8 +66,8 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "",
-          "ticket-regex": "^ABC-\\d+",
-          "ticket-regex-flags": "i",
+          "ticket-regex": "",
+          "ticket-regex-flags": "",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -84,13 +84,13 @@ describe("run", () => {
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
-    it("should error when ticket-regex is missing", async () => {
+    it("should use default regex when ticket-regex is not provided", async () => {
       mockGetInput.mockImplementation((name: string) => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
           "ticket-regex": "",
-          "ticket-regex-flags": "i",
+          "ticket-regex-flags": "",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -101,21 +101,13 @@ describe("run", () => {
 
       await run();
 
-      expect(mockError).toHaveBeenCalledWith(
-        "Missing required input: ticket-regex"
-      );
-      expect(mockUpdate).not.toHaveBeenCalled();
-    });
-
-    it("should error with plural when multiple inputs are missing", async () => {
-      mockGetInput.mockReturnValue("");
-
-      await run();
-
-      expect(mockError).toHaveBeenCalledWith(
-        "Missing required inputs: forecast-project-id, ticket-regex"
-      );
-      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
+      });
     });
   });
 
@@ -125,7 +117,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
@@ -141,8 +133,8 @@ describe("run", () => {
         owner: "testowner",
         repo: "testrepo",
         pull_number: 123,
-        title: "ABC-123 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/ABC-123)**\n\nThis PR fixes a critical bug",
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
       });
     });
 
@@ -151,7 +143,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
           "exception-regex-flags": "",
@@ -161,7 +153,7 @@ describe("run", () => {
         return inputs[name] || "";
       });
 
-      (github.context as any).payload.pull_request.title = "ABC-123 - Fix bug";
+      (github.context as any).payload.pull_request.title = "T123 - Fix bug";
 
       await run();
 
@@ -169,7 +161,7 @@ describe("run", () => {
         owner: "testowner",
         repo: "testrepo",
         pull_number: 123,
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/ABC-123)**\n\nThis PR fixes a critical bug",
+        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
       });
       expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty("title");
     });
@@ -179,7 +171,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
           "exception-regex-flags": "",
@@ -198,8 +190,8 @@ describe("run", () => {
         owner: "testowner",
         repo: "testrepo",
         pull_number: 123,
-        title: "ABC-123 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/ABC-123)**\n\nThis PR fixes a critical bug",
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
       });
     });
 
@@ -208,7 +200,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
           "exception-regex-flags": "",
@@ -219,7 +211,7 @@ describe("run", () => {
       });
 
       (github.context as any).payload.pull_request.body =
-        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/OLD-999)**\n\nThis PR fixes a critical bug";
+        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/P999)**\n\nThis PR fixes a critical bug";
 
       await run();
 
@@ -227,8 +219,8 @@ describe("run", () => {
         owner: "testowner",
         repo: "testrepo",
         pull_number: 123,
-        title: "ABC-123 - Fix bug in authentication",
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/ABC-123)**\n\nThis PR fixes a critical bug",
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug",
       });
     });
 
@@ -237,7 +229,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
           "exception-regex-flags": "",
@@ -248,7 +240,7 @@ describe("run", () => {
       });
 
       (github.context as any).payload.pull_request.body =
-        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/ABC-123)**\n\nThis PR fixes a critical bug";
+        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug";
 
       await run();
 
@@ -256,9 +248,38 @@ describe("run", () => {
         owner: "testowner",
         repo: "testrepo",
         pull_number: 123,
-        title: "ABC-123 - Fix bug in authentication",
+        title: "T123 - Fix bug in authentication",
       });
       expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty("body");
+    });
+
+    it("should work with P-prefixed project tickets", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "ticket-regex": "^[TP]\\d+",
+          "ticket-regex-flags": "i",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      (github.context as any).payload.pull_request.head.ref =
+        "P456-project-feature";
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "P456 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/P456)**\n\nThis PR fixes a critical bug",
+      });
     });
   });
 
@@ -268,7 +289,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
           "exception-regex-flags": "",
@@ -281,7 +302,7 @@ describe("run", () => {
       (github.context as any).payload.pull_request.head.ref =
         "feature/new-feature";
       (github.context as any).payload.pull_request.title =
-        "ABC-456 - Add new feature";
+        "P456 - Add new feature";
 
       await run();
 
@@ -289,7 +310,7 @@ describe("run", () => {
         owner: "testowner",
         repo: "testrepo",
         pull_number: 123,
-        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/ABC-456)**\n\nThis PR fixes a critical bug",
+        body: "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/P456)**\n\nThis PR fixes a critical bug",
       });
       expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty("title");
     });
@@ -301,7 +322,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
@@ -318,7 +339,7 @@ describe("run", () => {
       await run();
 
       expect(mockSetFailed).toHaveBeenCalledWith(
-        "Neither current branch nor title start with a Jira ticket /^ABC-\\d+/i."
+        "Neither current branch nor title start with a Forecast ticket /^[TP]\\d+/i."
       );
       expect(mockUpdate).not.toHaveBeenCalled();
     });
@@ -328,7 +349,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
@@ -354,7 +375,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "^DEPENDABOT/",
           "exception-regex-flags": "i",
@@ -381,7 +402,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
           "exception-regex-flags": "",
@@ -439,7 +460,7 @@ describe("run", () => {
         const inputs: Record<string, string> = {
           "github-token": "test-token",
           "forecast-project-id": "12345",
-          "ticket-regex": "^ABC-\\d+",
+          "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
           "exception-regex": "",
           "exception-regex-flags": "",
@@ -450,9 +471,9 @@ describe("run", () => {
       });
 
       (github.context as any).payload.pull_request.title =
-        "ABC-123 - Fix bug in authentication";
+        "T123 - Fix bug in authentication";
       (github.context as any).payload.pull_request.body =
-        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/ABC-123)**\n\nThis PR fixes a critical bug";
+        "**[Forecast ticket](https://app.forecast.it/project/12345/ticket/T123)**\n\nThis PR fixes a critical bug";
 
       await run();
 
