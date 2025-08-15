@@ -1,6 +1,9 @@
-name: Forecast Pull Request Info & Description
+name: Forecast Pull Request Action
 author: Kvalifik
-description: Add Forecast ticket to PR title / add links to PR description
+description: Automatically updates pull request titles and descriptions with Forecast project ticket information and links
+branding:
+  icon: link-2
+  color: blue
 inputs:
   github-token:
     description: The GitHub token used to create an authenticated client
