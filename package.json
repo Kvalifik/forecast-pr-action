@@ -8,7 +8,9 @@
   "private": true,
   "scripts": {
     "build": "tsc && ncc build lib/index.js --license licenses.txt",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
