@@ -70,6 +70,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "",
           "ticket-regex-flags": "",
+          "ticket-prefix-format": "",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -95,6 +96,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "",
           "ticket-regex-flags": "",
+          "ticket-prefix-format": "",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -125,6 +127,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -153,6 +156,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -181,6 +185,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -211,6 +216,7 @@ describe("run", () => {
           "forecast-link-placeholder": "{{FORECAST_LINK}}",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -242,6 +248,7 @@ describe("run", () => {
           "forecast-link-placeholder": "{{FORECAST_LINK}}",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -265,6 +272,95 @@ describe("run", () => {
     });
   });
 
+  describe("ticket prefix format", () => {
+    it("should use custom ticket prefix format when provided", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "ticket-prefix-format": "[<Number>]: ",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "[T123]: Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
+      });
+    });
+
+    it("should use default prefix format when not provided", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "T123 - Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
+      });
+    });
+
+    it("should handle different custom formats", async () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          "github-token": "test-token",
+          "forecast-project-id": "12345",
+          "forecast-base-url": "",
+          "forecast-link-placeholder": "",
+          "ticket-regex": "^T\\d+",
+          "ticket-regex-flags": "i",
+          "ticket-prefix-format": "(<Number>) ",
+          "exception-regex": "",
+          "exception-regex-flags": "",
+          "clean-title-regex": "",
+          "clean-title-regex-flags": "",
+        };
+        return inputs[name] || "";
+      });
+
+      await run();
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        owner: "testowner",
+        repo: "testrepo",
+        pull_number: 123,
+        title: "(T123) Fix bug in authentication",
+        body: "**[Forecast ticket](https://app.forecast.it/project/P12345/task-board/T123)**\n\nThis PR fixes a critical bug",
+      });
+    });
+  });
+
   describe("when ticket is found in branch name", () => {
     it("should update PR title and body with ticket info", async () => {
       mockGetInput.mockImplementation((name: string) => {
@@ -275,6 +371,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -303,6 +400,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^T\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -333,6 +431,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -366,6 +465,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
           "clean-title-regex": "",
@@ -395,6 +495,7 @@ describe("run", () => {
           "forecast-link-placeholder": "",
           "ticket-regex": "^[TP]\\d+",
           "ticket-regex-flags": "i",
+          "ticket-prefix-format": "",
           "exception-regex": "^dependabot/",
           "exception-regex-flags": "",
           "clean-title-regex": "",

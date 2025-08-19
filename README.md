@@ -2,6 +2,10 @@
 
 A GitHub Action that automatically updates pull request titles and descriptions with Forecast project ticket information. When developers create branches with Forecast ticket numbers, this action enriches PRs with ticket links and proper formatting.
 
+## Acknowledgements
+
+This action was inspired by [jira-pr-action](https://github.com/onrunning/jira-pr-action), adapting its concept for use with Forecast project management.
+
 ## Features
 
 - Automatically extracts Forecast ticket numbers from branch names or PR titles
@@ -48,6 +52,7 @@ jobs:
 | `forecast-link-placeholder` | Placeholder in PR description for Forecast link | No | - |
 | `ticket-regex` | Regular expression to match ticket numbers | No | `^[TP]\d+` |
 | `ticket-regex-flags` | Regex flags (e.g., "i" for case-insensitive) | No | `i` |
+| `ticket-prefix-format` | Format for ticket prefix in PR title (use `<Number>` as placeholder) | No | `<Number> - ` |
 | `exception-regex` | Pattern for branches to skip (e.g., Dependabot) | No | `^dependabot/` |
 | `exception-regex-flags` | Flags for exception regex | No | - |
 | `clean-title-regex` | Pattern to remove from PR titles | No | - |
@@ -84,6 +89,21 @@ jobs:
     clean-title-regex: "\\[WIP\\]\\s*"
     clean-title-regex-flags: "i"
 ```
+
+### With Custom Ticket Prefix Format
+
+```yaml
+- uses: kvalifik/forecast-pr-action@v1
+  with:
+    forecast-project-id: "12345"
+    ticket-prefix-format: "[<Number>]: "  # Results in "[T123]: PR Title"
+```
+
+You can customize how the ticket number appears in PR titles:
+- `"<Number> - "` (default): `T123 - PR Title`
+- `"[<Number>]: "`: `[T123]: PR Title`
+- `"(<Number>) "`: `(T123) PR Title`
+- `"<Number>: "`: `T123: PR Title`
 
 ### With PR Description Template
 

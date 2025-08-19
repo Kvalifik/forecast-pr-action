@@ -27,6 +27,10 @@ inputs:
     description: Flags to add to ticket-regex
     default: i
     required: false
+  ticket-prefix-format:
+    description: Format for the ticket prefix in PR title (use <Number> as placeholder for ticket number)
+    default: "<Number> - "
+    required: false
   exception-regex:
     description: Regex to allow exceptions where ticket-regex wouldn't match
     default: ^dependabot\/

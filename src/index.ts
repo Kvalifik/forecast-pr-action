@@ -7,6 +7,7 @@ const INPUT_FORECAST_BASE_URL = "forecast-base-url";
 const INPUT_FORECAST_LINK_PLACEHOLDER = "forecast-link-placeholder";
 const INPUT_TICKET_REGEX = "ticket-regex";
 const INPUT_TICKET_REGEX_FLAGS = "ticket-regex-flags";
+const INPUT_TICKET_PREFIX_FORMAT = "ticket-prefix-format";
 const INPUT_EXCEPTION_REGEX = "exception-regex";
 const INPUT_EXCEPTION_REGEX_FLAGS = "exception-regex-flags";
 const INPUT_CLEAN_TITLE_REGEX = "clean-title-regex";
@@ -46,6 +47,8 @@ export async function run(): Promise<void> {
     );
     const ticketRegexInput = core.getInput(INPUT_TICKET_REGEX);
     const ticketRegexFlags = core.getInput(INPUT_TICKET_REGEX_FLAGS);
+    const ticketPrefixFormat =
+      core.getInput(INPUT_TICKET_PREFIX_FORMAT) || "<Number> - ";
     const exceptionRegex = core.getInput(INPUT_EXCEPTION_REGEX);
     const exceptionRegexFlags = core.getInput(INPUT_EXCEPTION_REGEX_FLAGS);
     const cleanTitleRegexInput = core.getInput(INPUT_CLEAN_TITLE_REGEX);
@@ -96,8 +99,10 @@ export async function run(): Promise<void> {
       );
       ticketLine = `**[${FORECAST_LINK_TEXT}](${forecastLink})**\n`;
 
-      if (!ticketRegex.test(prTitle))
-        request.title = `${ticketInBranch} - ${prTitle}`;
+      if (!ticketRegex.test(prTitle)) {
+        const prefix = ticketPrefixFormat.replace("<Number>", ticketInBranch);
+        request.title = `${prefix}${prTitle}`;
+      }
     } else {
       const isException = new RegExp(exceptionRegex, exceptionRegexFlags).test(
         headBranch
